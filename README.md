@@ -1,9 +1,12 @@
 [![Release](https://jitpack.io/v/umjammer/ivoa-fits.svg)](https://jitpack.io/#umjammer/ivoa-fits)
-[![Java CI](https://github.com/umjammer/ivoa-fits-avif/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/ivoa-fits-avif/actions/workflows/maven.yml)
+[![Java CI](https://github.com/umjammer/ivoa-fits/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/ivoa-fits/actions/workflows/maven.yml)
 [![CodeQL](https://github.com/umjammer/ivoa-fits/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/umjammer/ivoa-fits/actions/workflows/codeql-analysis.yml)
 ![Java](https://img.shields.io/badge/Java-8-b07219)
 
 # IVOA FITS Package
+
+this project is the mavenized and imageio-spi-nized fits package<br/>
+this is a fork of https://github.com/nom-tam-fits/edu.jhu.pha.sdss.fits
 
 ## About the IVOA FITS Package
 
@@ -13,7 +16,7 @@ currently used to provide image viewing functionality in VO Enabled Mirage. FITS
 
 ## Notes on the latest version
 
-For version 0.3, some changes were made to accomodate a change in the underlying java imageio implementation.
+For version 0.3, some changes were made to accommodate a change in the underlying java imageio implementation.
 Specifically, it was necessary to change the code handling gzipped images. Consequently, the constructor for
 ImageInputStreamInputStream now throws IOException if it runs into problems, and the public static method
 gunzipIfNecessary(InputStream in) has been moved from the FITSReader class into the ImageInputStreamInputStream class
@@ -22,9 +25,8 @@ accordingly. Everyone else should be able to disregard this notice.
 
 ## Using the IVOA FITS Package to view FITS images
 
-The IVOA FITS package is divided into two main subpackages, edu.jhu.pha.sdss.fits and edu.jhu.pha.sdss.fits.imageio. The
-preferred way to load a FITS image for viewing using the IVOA FITS Package is to register the included Java ImageIO SPI
-implementation adding this package into your `pom.xml`:
+The IVOA FITS package is divided by jitpack. The preferred way to load a FITS image for viewing using the IVOA FITS Package
+is to register the included Java ImageIO SPI implementation adding this package into your `pom.xml`:
 
  https://jitpack.io/#umjammer/ivoa-fits
 
@@ -32,7 +34,7 @@ This code should be placed in some class that is guaranteed to be loaded before 
 can then be loaded using the normal Java ImageIO interface, as follows:
 
 ```java
-    BufferedImage image = ImageIO.read(in);
+    BufferedImage image = ImageIO.read(Paths.get("/foo/bar.fits").toFile());
 ```
 
 This will load any type of image supported natively by Java, as well as FITS images, provided that the SPI
