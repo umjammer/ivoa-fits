@@ -1,12 +1,39 @@
 [![Release](https://jitpack.io/v/umjammer/ivoa-fits.svg)](https://jitpack.io/#umjammer/ivoa-fits)
 [![Java CI](https://github.com/umjammer/ivoa-fits/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/ivoa-fits/actions/workflows/maven.yml)
 [![CodeQL](https://github.com/umjammer/ivoa-fits/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/umjammer/ivoa-fits/actions/workflows/codeql-analysis.yml)
-![Java](https://img.shields.io/badge/Java-8-b07219)
+![Java](https://img.shields.io/badge/Java-17-b07219)
 
-# IVOA FITS Package
+# FITS
 
-this project is the mavenized and imageio-spi-nized fits package<br/>
+<img alt="The Horsehead Nebula" src="https://github.com/umjammer/ivoa-fits/assets/493908/b6374d77-df5e-4458-befa-bf2837210a3c" width="200"/> <sub><a href="https://esahubble.org/projects/fits_liberator/fitsimages/james_long_18/">James Long & the ESA/ESO/NASA Photoshop FITS Liberator</a></sub>
+
+this project is the mavenized and imageio-spi-nized fits imageio plugin<br/>
 this is a fork of https://github.com/nom-tam-fits/edu.jhu.pha.sdss.fits
+
+## Install
+
+ * [maven](https://jitpack.io/#umjammer/ivoa-fits)
+
+## Usage
+
+```java
+    BufferedImage image = ImageIO.read(Paths.get("/foo/bar.fits").toFile());
+```
+
+## References
+
+* https://fits.gsfc.nasa.gov/fits_libraries.html (portal)
+* https://github.com/nom-tam-fits/nom-tam-fits
+* https://github.com/Starlink/starjava
+* https://github.com/LivTel/org_estar_fits
+* https://github.com/ThomasBHickey/JFits (sample)
+
+## TODO
+
+* rename project to vavi-image-fits?
+---
+
+# [Original](https://github.com/nom-tam-fits/edu.jhu.pha.sdss.fits)
 
 ## About the IVOA FITS Package
 
@@ -73,11 +100,3 @@ argument to the above java command:
 ```
 -Ddebug=on
 ```
-
-## References
-
-* https://fits.gsfc.nasa.gov/fits_libraries.html (portal)
-* https://github.com/nom-tam-fits/nom-tam-fits
-* https://github.com/Starlink/starjava
-* https://github.com/LivTel/org_estar_fits
-* https://github.com/ThomasBHickey/JFits (sample)
