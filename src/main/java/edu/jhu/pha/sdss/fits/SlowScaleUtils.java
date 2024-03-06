@@ -6,10 +6,6 @@
 
 package edu.jhu.pha.sdss.fits;
 
-import edu.jhu.pha.sdss.fits.Histogram;
-import edu.jhu.pha.sdss.fits.ScaleUtils;
-
-
 /**
  * SlowScaleUtils.
  * <p>
@@ -18,9 +14,11 @@ import edu.jhu.pha.sdss.fits.ScaleUtils;
  * the right type in the damn parameter list.
  *
  * @author carliles
- * @version 1.1
+ * @version 1.1 2004/07/23 18:52:35 carliles SlowFITSImage is done.
  */
-public class SlowScaleUtils extends ScaleUtils {
+public final class SlowScaleUtils extends ScaleUtils {
+
+    private SlowScaleUtils() {}
 
     public static final Scaler BYTE_SCALER = new ByteScaler();
     public static final Scaler SHORT_SCALER = new ShortScaler();
@@ -139,6 +137,7 @@ public class SlowScaleUtils extends ScaleUtils {
     }
 
     public static class ByteScaler implements Scaler {
+        @Override
         public short[] linearScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -173,6 +172,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] logScaleToUShort(Object data, short[] result,
                                         int width, int height,
                                         double bZero, double bScale,
@@ -221,6 +221,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] sqrtScaleToUShort(Object data, short[] result,
                                          int width, int height,
                                          double bZero, double bScale,
@@ -266,6 +267,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] squareScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -302,6 +304,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] histEQScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -337,6 +340,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] asinhScaleToUShort(Object data, short[] result,
                                           int width, int height,
                                           double bZero, double bScale,
@@ -376,6 +380,7 @@ public class SlowScaleUtils extends ScaleUtils {
     }
 
     public static class ShortScaler implements Scaler {
+        @Override
         public short[] linearScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -404,6 +409,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] logScaleToUShort(Object data, short[] result,
                                         int width, int height,
                                         double bZero, double bScale,
@@ -444,6 +450,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] sqrtScaleToUShort(Object data, short[] result,
                                          int width, int height,
                                          double bZero, double bScale,
@@ -480,6 +487,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] squareScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -510,6 +518,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] histEQScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -541,6 +550,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] asinhScaleToUShort(Object data, short[] result,
                                           int width, int height,
                                           double bZero, double bScale,
@@ -575,6 +585,7 @@ public class SlowScaleUtils extends ScaleUtils {
     }
 
     public static class IntScaler implements Scaler {
+        @Override
         public short[] linearScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -603,6 +614,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] logScaleToUShort(Object data, short[] result,
                                         int width, int height,
                                         double bZero, double bScale,
@@ -636,6 +648,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] sqrtScaleToUShort(Object data, short[] result,
                                          int width, int height,
                                          double bZero, double bScale,
@@ -666,6 +679,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] squareScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -696,6 +710,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] histEQScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -727,6 +742,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] asinhScaleToUShort(Object data, short[] result,
                                           int width, int height,
                                           double bZero, double bScale,
@@ -761,6 +777,7 @@ public class SlowScaleUtils extends ScaleUtils {
     }
 
     public static class FloatScaler implements Scaler {
+        @Override
         public short[] linearScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -789,6 +806,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] logScaleToUShort(Object data, short[] result,
                                         int width, int height,
                                         double bZero, double bScale,
@@ -824,6 +842,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] sqrtScaleToUShort(Object data, short[] result,
                                          int width, int height,
                                          double bZero, double bScale,
@@ -854,6 +873,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] squareScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -884,6 +904,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] histEQScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -915,6 +936,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] asinhScaleToUShort(Object data, short[] result,
                                           int width, int height,
                                           double bZero, double bScale,
@@ -948,6 +970,7 @@ public class SlowScaleUtils extends ScaleUtils {
     }
 
     public static class DoubleScaler implements Scaler {
+        @Override
         public short[] linearScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -976,6 +999,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] logScaleToUShort(Object data, short[] result,
                                         int width, int height,
                                         double bZero, double bScale,
@@ -1009,6 +1033,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] sqrtScaleToUShort(Object data, short[] result,
                                          int width, int height,
                                          double bZero, double bScale,
@@ -1039,6 +1064,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] squareScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -1069,6 +1095,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] histEQScaleToUShort(Object data, short[] result,
                                            int width, int height,
                                            double bZero, double bScale,
@@ -1100,6 +1127,7 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
 
+        @Override
         public short[] asinhScaleToUShort(Object data, short[] result,
                                           int width, int height,
                                           double bZero, double bScale,
@@ -1132,20 +1160,4 @@ public class SlowScaleUtils extends ScaleUtils {
             return result;
         }
     }
-
-    /**
-     * @return CVS Revision number.
-     */
-    public static String revision() {
-        return "$Revision: 1.1 $";
-    }
 }
-
-/*
- * Revision History
- * ================
- *
- * $Log: SlowScaleUtils.java,v $
- * Revision 1.1  2004/07/23 18:52:35  carliles
- * SlowFITSImage is done.
- */

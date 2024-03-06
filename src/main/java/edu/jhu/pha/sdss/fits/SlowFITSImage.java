@@ -33,6 +33,7 @@ import nom.tam.fits.BasicHDU;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.ImageHDU;
+import nom.tam.fits.header.Bitpix;
 import vavi.util.Debug;
 import vavi.util.StringUtil;
 
@@ -41,7 +42,35 @@ import vavi.util.StringUtil;
  * SlowFITSImage.
  *
  * @author carliles
- * @version 1.2
+ * @version 1.2  2004/07/23 18:52:35  carliles SlowFITSImage is done.
+ *          1.1  2004/07/22 22:29:08  carliles Added "low" memory consumption SlowFITSImage.
+ *          1.19 2004/07/21 22:24:57  carliles Removed some commented crap.
+ *
+ *          1.18 2004/07/21 18:03:55  carliles Added asinh with sigma estimation.
+ *          1.17 2004/07/16 02:48:53  carliles Hist EQ doesn't look quite right, but there's nothing to compare it to,
+ *                                             and the math looks right.
+ *          1.16 2004/07/14 02:40:49  carliles Scaling should be done once and for all, with all possible accelerations.
+ *                                             Now just have to add hist eq and asinh.
+ *          1.15 2004/07/09 02:22:31  carliles Added log/sqrt maps, fixed wrong output for byte images (again).
+ *          1.14 2004/06/21 05:38:39  carliles Got rescale lookup acceleration working for short images.
+ *                                             Also in theory for int images, though I can't test because of
+ *                                             dynamic range of my int image.
+ *          1.13 2004/06/19 01:11:49  carliles Converted FITSImage to extend BufferedImage.
+ *          1.12 2004/06/17 01:05:05  carliles Fixed some image orientation shit.
+ *                                             Added getOriginalValue method to FITSImage.
+ *          1.11 2004/06/16 22:27:20  carliles Fixed bug with ImageHDU crap in FITSImage.
+ *          1.10 2004/06/16 22:21:02  carliles Added method to fetch ImageHDU from FITSImage.
+ *          1.9  2004/06/07 21:14:06  carliles Rescale works nicely for all types now.
+ *          1.8  2004/06/07 20:05:19  carliles Added rescale to FITSImage.
+ *          1.7  2004/06/04 23:11:52  carliles Cleaned up histogram crap a bit.
+ *          1.6  2004/06/04 01:01:36  carliles Got rid of some overmodelling.
+ *          1.5  2004/06/02 22:17:37  carliles Got the hang of cut levels.
+ *                                             Need to implement widely and as efficiently as possible.
+ *          1.4  2004/06/02 19:39:36  carliles Adding histogram crap.
+ *          1.3  2004/05/27 17:01:03  carliles ImageIO FITS reading "works".  Some cleanup would be good.
+ *          1.2  2004/05/26 23:00:15  carliles Fucking Sun and their fucking BufferedImages everywhere.
+ *          1.1  2004/05/26 16:56:11  carliles Initial checkin of separate FITS package.
+ *          1.12 2003/08/19 19:12:30  carliles
  */
 public class SlowFITSImage extends FITSImage {
 
@@ -67,8 +96,8 @@ public class SlowFITSImage extends FITSImage {
         setFits(fits);
         setHistogram((Histogram) delegate.getProperty("histogram"));
         setDelegate(delegate);
-        _scaleMethod = scaleMethod;
-        _scaledData = (short[]) delegate.getProperty("scaledData");
+        this.scaleMethod = scaleMethod;
+        scaledData = (short[]) delegate.getProperty("scaledData");
 
         ImageHDU imageHDU = (ImageHDU) delegate.getProperty("imageHDU");
         if (imageHDU == null) {
@@ -76,9 +105,9 @@ public class SlowFITSImage extends FITSImage {
         }
         setImageHDU(imageHDU);
 
-        _min = getHistogram().getMin();
-        _max = getHistogram().getMax();
-        _sigma = getHistogram().estimateSigma();
+        min = getHistogram().getMin();
+        max = getHistogram().getMax();
+        sigma = getHistogram().estimateSigma();
     }
 
     public SlowFITSImage(File file)
@@ -121,46 +150,50 @@ public class SlowFITSImage extends FITSImage {
         return ScaleUtils.getScaleNames();
     }
 
+    @Override
     public Fits getFits() {
-        return _fits;
+        return fits;
     }
 
+    @Override
     public ImageHDU getImageHDU() {
-        return _imageHDU;
+        return imageHDU;
     }
 
     protected void setHistogram(Histogram histogram) {
-        _histogram = histogram;
+        this.histogram = histogram;
     }
 
+    @Override
     public Histogram getHistogram() {
-        return _histogram;
+        return histogram;
     }
 
+    @Override
     public double getOriginalValue(int x, int y) throws FitsException {
         double result = Double.NaN;
         double bZero = getImageHDU().getBZero();
         double bScale = getImageHDU().getBScale();
         Object data = getImageHDU().getData().getData();
 
-        switch (getImageHDU().getBitPix()) {
-        case 8:
+        switch (getImageHDU().getBitpix()) {
+        case BYTE:
             int dataVal = ((byte[][]) data)[y][x];
             if (dataVal < 0) {
                 dataVal += 256;
             }
             result = bZero + bScale * dataVal;
             break;
-        case 16:
+        case SHORT:
             result = bZero + bScale * ((double) ((short[][]) data)[y][x]);
             break;
-        case 32:
+        case INTEGER:
             result = bZero + bScale * ((double) ((int[][]) data)[y][x]);
             break;
-        case -32:
+        case FLOAT:
             result = bZero + bScale * ((double) ((float[][]) data)[y][x]);
             break;
-        case -64:
+        case DOUBLE:
             result = bZero + bScale * ((double[][]) data)[y][x];
             break;
         default:
@@ -170,227 +203,274 @@ public class SlowFITSImage extends FITSImage {
         return result;
     }
 
+    @Override
     public int getScaleMethod() {
-        return _scaleMethod;
+        return scaleMethod;
     }
 
+    @Override
     public void setScaleMethod(int scaleMethod) {
-        if (scaleMethod != _scaleMethod) {
+        if (scaleMethod != this.scaleMethod) {
             try {
-                setDelegate(createScaledImage(getImageHDU(), _scaledData,
-                        getHistogram(), _min, _max,
-                        _sigma, scaleMethod));
-                _scaleMethod = scaleMethod;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    public void rescale(double min, double max, double sigma) {
-        if (min != _min || max != _max || sigma != _sigma) {
-            try {
-                _min = min;
-                _max = max;
-                _sigma = sigma;
-                setDelegate(createScaledImage(getImageHDU(), _scaledData,
+                setDelegate(createScaledImage(getImageHDU(), scaledData,
                         getHistogram(), min, max,
-                        sigma, _scaleMethod));
+                        sigma, scaleMethod));
+                this.scaleMethod = scaleMethod;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
     }
 
+    @Override
+    public void rescale(double min, double max, double sigma) {
+        if (min != this.min || max != this.max || sigma != this.sigma) {
+            try {
+                this.min = min;
+                this.max = max;
+                this.sigma = sigma;
+                setDelegate(createScaledImage(getImageHDU(), scaledData,
+                        getHistogram(), min, max,
+                        sigma, scaleMethod));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
     protected BufferedImage getDelegate() {
-        return _delegate;
+        return delegate;
     }
 
     protected void setDelegate(BufferedImage delegate) {
-        _delegate = delegate;
+        this.delegate = delegate;
     }
 
 //#region BufferedImage METHODS
 
+    @Override
     public WritableRaster copyData(WritableRaster outRaster) {
         return getDelegate().copyData(outRaster);
     }
 
+    @Override
     public Graphics2D createGraphics() {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public void flush() {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public WritableRaster getAlphaRaster() {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public ColorModel getColorModel() {
         return getDelegate().getColorModel();
     }
 
+    @Override
     public Raster getData() {
         return getDelegate().getData();
     }
 
+    @Override
     public Raster getData(Rectangle rect) {
         return getDelegate().getData(rect);
     }
 
+    @Override
     public Graphics getGraphics() {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public int getHeight() {
         return getDelegate().getHeight();
     }
 
+    @Override
     public int getHeight(ImageObserver observer) {
         return getDelegate().getHeight(observer);
     }
 
+    @Override
     public int getMinTileX() {
         return getDelegate().getMinTileX();
     }
 
+    @Override
     public int getMinTileY() {
         return getDelegate().getMinTileY();
     }
 
+    @Override
     public int getMinX() {
         return getDelegate().getMinX();
     }
 
+    @Override
     public int getMinY() {
         return getDelegate().getMinY();
     }
 
+    @Override
     public int getNumXTiles() {
         return getDelegate().getNumXTiles();
     }
 
+    @Override
     public int getNumYTiles() {
         return getDelegate().getNumYTiles();
     }
 
+    @Override
     public Object getProperty(String name) {
         return getDelegate().getProperty(name);
     }
 
+    @Override
     public Object getProperty(String name, ImageObserver observer) {
         return getDelegate().getProperty(name, observer);
     }
 
+    @Override
     public String[] getPropertyNames() {
         return getDelegate().getPropertyNames();
     }
 
+    @Override
     public WritableRaster getRaster() {
         return getDelegate().getRaster();
     }
 
+    @Override
     public int getRGB(int x, int y) {
         return getDelegate().getRGB(x, y);
     }
 
+    @Override
     public int[] getRGB(int startX, int startY, int w, int h,
                         int[] rgbArray, int offset, int scansize) {
         return getDelegate().getRGB(startX, startY, w, h,
                 rgbArray, offset, scansize);
     }
 
+    @Override
     public SampleModel getSampleModel() {
         return getDelegate().getSampleModel();
     }
 
+    @Override
     public ImageProducer getSource() {
         return getDelegate().getSource();
     }
 
+    @Override
     public Vector<RenderedImage> getSources() {
         return getDelegate().getSources();
     }
 
+    @Override
     public BufferedImage getSubimage(int x, int y, int w, int h) {
         return getDelegate().getSubimage(x, y, w, h);
     }
 
+    @Override
     public Raster getTile(int tileX, int tileY) {
         return getDelegate().getTile(tileX, tileY);
     }
 
+    @Override
     public int getTileGridXOffset() {
         return getDelegate().getTileGridXOffset();
     }
 
+    @Override
     public int getTileGridYOffset() {
         return getDelegate().getTileGridYOffset();
     }
 
+    @Override
     public int getTileHeight() {
         return getDelegate().getTileHeight();
     }
 
+    @Override
     public int getTileWidth() {
         return getDelegate().getTileWidth();
     }
 
+    @Override
     public int getType() {
         return getDelegate().getType();
     }
 
+    @Override
     public int getWidth() {
         return getDelegate().getWidth();
     }
 
+    @Override
     public int getWidth(ImageObserver observer) {
         return getDelegate().getWidth(observer);
     }
 
+    @Override
     public WritableRaster getWritableTile(int tileX, int tileY) {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public Point[] getWritableTileIndices() {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public boolean hasTileWriters() {
         return false;
     }
 
+    @Override
     public boolean isAlphaPremultiplied() {
         return true;
     }
 
+    @Override
     public boolean isTileWritable(int tileX, int tileY) {
         return false;
     }
 
+    @Override
     public void releaseWritableTile(int tileX, int tileY) {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public void setData(Raster r) {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public void setRGB(int x, int y, int rgb) {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public void setRGB(int startX, int startY, int w, int h,
                        int[] rgbArray, int offset, int scansize) {
         throw new RuntimeException(new Exception().getStackTrace()[0].
@@ -403,12 +483,14 @@ public class SlowFITSImage extends FITSImage {
 
 //#endregion BufferedImage METHODS
 
+    @Override
     protected void setFits(Fits fits) {
-        _fits = fits;
+        this.fits = fits;
     }
 
+    @Override
     protected void setImageHDU(ImageHDU imageHDU) {
-        _imageHDU = imageHDU;
+        this.imageHDU = imageHDU;
     }
 
     protected static ImageHDU findFirstImageHDU(Fits fits)
@@ -447,34 +529,23 @@ public class SlowFITSImage extends FITSImage {
      */
     public static BufferedImage createScaledImage(ImageHDU hdu, int scaleMethod)
             throws FitsException, DataTypeNotSupportedException {
-        int bitpix = hdu.getBitPix();
+        Bitpix bitpix = hdu.getBitpix();
         int width = hdu.getAxes()[1]; // yes, the axes are in the wrong order
         int height = hdu.getAxes()[0];
         double bZero = hdu.getBZero();
         double bScale = hdu.getBScale();
         Object data = hdu.getData().getData();
-        Histogram hist = null;
-
-        switch (bitpix) {
-        case 8:
-            hist = ScaleUtils.computeHistogram((byte[][]) data, bZero, bScale);
-            break;
-        case 16:
-            hist = ScaleUtils.computeHistogram((short[][]) data, bZero, bScale);
-            break;
-        case 32:
-            hist = ScaleUtils.computeHistogram((int[][]) data, bZero, bScale);
-            break;
-        case -32:
-            Debug.println(StringUtil.paramString(data));
-            hist = ScaleUtils.computeHistogram(((float[][][]) data)[0], bZero, bScale); // TODO
-            break;
-        case -64:
-            hist = ScaleUtils.computeHistogram((double[][]) data, bZero, bScale);
-            break;
-        default:
-            throw new DataTypeNotSupportedException(bitpix);
-        }
+        Histogram hist = switch (bitpix) {
+            case BYTE -> ScaleUtils.computeHistogram((byte[][]) data, bZero, bScale);
+            case SHORT -> ScaleUtils.computeHistogram((short[][]) data, bZero, bScale);
+            case INTEGER -> ScaleUtils.computeHistogram((int[][]) data, bZero, bScale);
+            case FLOAT -> {
+Debug.println(StringUtil.paramString(data));
+                yield ScaleUtils.computeHistogram(((float[][][]) data)[0], bZero, bScale); // TODO
+            }
+            case DOUBLE -> ScaleUtils.computeHistogram((double[][]) data, bZero, bScale);
+            default -> throw new DataTypeNotSupportedException(bitpix);
+        };
 
         return createScaledImage(hdu, null, hist, hist.getMin(), hist.getMax(),
                 hist.estimateSigma(), scaleMethod);
@@ -487,7 +558,7 @@ public class SlowFITSImage extends FITSImage {
                                                   double sigma,
                                                   int scaleMethod)
             throws FitsException, DataTypeNotSupportedException {
-        int bitpix = hdu.getBitPix();
+        Bitpix bitpix = hdu.getBitpix();
         Object data = hdu.getData().getData();
         int width = hdu.getAxes()[1]; // yes, the axes are in the wrong order
         int height = hdu.getAxes()[0];
@@ -515,7 +586,7 @@ public class SlowFITSImage extends FITSImage {
     }
 
     public static class DataTypeNotSupportedException extends Exception {
-        public DataTypeNotSupportedException(int bitpix) {
+        public DataTypeNotSupportedException(Bitpix bitpix) {
             super(bitpix + " is not a valid FITS data type.");
         }
     }
@@ -526,96 +597,14 @@ public class SlowFITSImage extends FITSImage {
         }
     }
 
-    /**
-     * @return CVS Revision number.
-     */
-    public static String revision() {
-        return "$Revision: 1.2 $";
-    }
+    protected Fits fits;
+    protected ImageHDU imageHDU;
 
-    protected Fits _fits;
-    protected ImageHDU _imageHDU;
-
-    protected int _scaleMethod;
-    protected short[] _scaledData;
-    protected double _sigma;
-    protected double _min;
-    protected double _max;
-    protected Histogram _histogram;
-    protected BufferedImage _delegate;
+    protected int scaleMethod;
+    protected final short[] scaledData;
+    protected double sigma;
+    protected double min;
+    protected double max;
+    protected Histogram histogram;
+    protected BufferedImage delegate;
 }
-
-/*
- * Revision History
- * ================
- *
- * $Log: SlowFITSImage.java,v $
- * Revision 1.2  2004/07/23 18:52:35  carliles
- * SlowFITSImage is done.
- *
- * Revision 1.1  2004/07/22 22:29:08  carliles
- * Added "low" memory consumption SlowFITSImage.
- *
- * Revision 1.19  2004/07/21 22:24:57  carliles
- * Removed some commented crap.
- *
- * Revision 1.18  2004/07/21 18:03:55  carliles
- * Added asinh with sigma estimation.
- *
- * Revision 1.17  2004/07/16 02:48:53  carliles
- * Hist EQ doesn't look quite right, but there's nothing to compare it to, and the
- * math looks right.
- *
- * Revision 1.16  2004/07/14 02:40:49  carliles
- * Scaling should be done once and for all, with all possible accelerations.  Now
- * just have to add hist eq and asinh.
- *
- * Revision 1.15  2004/07/09 02:22:31  carliles
- * Added log/sqrt maps, fixed wrong output for byte images (again).
- *
- * Revision 1.14  2004/06/21 05:38:39  carliles
- * Got rescale lookup acceleration working for short images.  Also in theory for
- * int images, though I can't test because of dynamic range of my int image.
- *
- * Revision 1.13  2004/06/19 01:11:49  carliles
- * Converted FITSImage to extend BufferedImage.
- *
- * Revision 1.12  2004/06/17 01:05:05  carliles
- * Fixed some image orientation shit.  Added getOriginalValue method to FITSImage.
- *
- * Revision 1.11  2004/06/16 22:27:20  carliles
- * Fixed bug with ImageHDU crap in FITSImage.
- *
- * Revision 1.10  2004/06/16 22:21:02  carliles
- * Added method to fetch ImageHDU from FITSImage.
- *
- * Revision 1.9  2004/06/07 21:14:06  carliles
- * Rescale works nicely for all types now.
- *
- * Revision 1.8  2004/06/07 20:05:19  carliles
- * Added rescale to FITSImage.
- *
- * Revision 1.7  2004/06/04 23:11:52  carliles
- * Cleaned up histogram crap a bit.
- *
- * Revision 1.6  2004/06/04 01:01:36  carliles
- * Got rid of some overmodelling.
- *
- * Revision 1.5  2004/06/02 22:17:37  carliles
- * Got the hang of cut levels.  Need to implement widely and as efficiently as
- * possible.
- *
- * Revision 1.4  2004/06/02 19:39:36  carliles
- * Adding histogram crap.
- *
- * Revision 1.3  2004/05/27 17:01:03  carliles
- * ImageIO FITS reading "works".  Some cleanup would be good.
- *
- * Revision 1.2  2004/05/26 23:00:15  carliles
- * Fucking Sun and their fucking BufferedImages everywhere.
- *
- * Revision 1.1  2004/05/26 16:56:11  carliles
- * Initial checkin of separate FITS package.
- *
- * Revision 1.12  2003/08/19 19:12:30  carliles
- */

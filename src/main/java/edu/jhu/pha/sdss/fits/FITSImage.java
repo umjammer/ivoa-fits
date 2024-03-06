@@ -33,6 +33,7 @@ import nom.tam.fits.BasicHDU;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.ImageHDU;
+import nom.tam.fits.header.Bitpix;
 
 
 /**
@@ -43,6 +44,36 @@ import nom.tam.fits.ImageHDU;
  * equalization algorithm is just that; it works to fit the values to a uniform
  * distribution curve.  The inverse hyperbolic sine scaling has linear behavior
  * below the sigma parameter and logarithmic behavior above the sigma parameter.
+ *
+ * @author carliles
+ * @version  1.21 2004/07/23 21:54:11  carliles Added javadocs.
+ *           1.20 2004/07/22 22:29:08  carliles Added "low" memory consumption SlowFITSImage.
+ *           1.19 2004/07/21 22:24:57  carliles Removed some commented crap.
+ *           1.18 2004/07/21 18:03:55  carliles Added asinh with sigma estimation.
+ *           1.17 2004/07/16 02:48:53  carliles Hist EQ doesn't look quite right, but there's nothing
+ *                                               to compare it to, and the math looks right.
+ *           1.16 2004/07/14 02:40:49  carliles Scaling should be done once and for all, with all possible
+ *                                               accelerations. Now just have to add hist eq and asinh.
+ *           1.15 2004/07/09 02:22:31  carliles Added log/sqrt maps, fixed wrong output for byte images (again).
+ *           1.14 2004/06/21 05:38:39  carliles Got rescale lookup acceleration working for short images.
+ *                                               Also in theory for int images, though I can't test because of
+ *                                               dynamic range of my int image.
+ *           1.13 2004/06/19 01:11:49  carliles Converted FITSImage to extend BufferedImage.
+ *           1.12 2004/06/17 01:05:05  carliles Fixed some image orientation shit.
+ *                                               Added getOriginalValue method to FITSImage.
+ *           1.11 2004/06/16 22:27:20  carliles Fixed bug with ImageHDU crap in FITSImage.
+ *           1.10 2004/06/16 22:21:02  carliles Added method to fetch ImageHDU from FITSImage.
+ *           1.9  2004/06/07 21:14:06  carliles Rescale works nicely for all types now.
+ *           1.8  2004/06/07 20:05:19  carliles Added rescale to FITSImage.
+ *           1.7  2004/06/04 23:11:52  carliles Cleaned up histogram crap a bit.
+ *           1.6  2004/06/04 01:01:36  carliles Got rid of some overmodelling.
+ *           1.5  2004/06/02 22:17:37  carliles Got the hang of cut levels.
+ *                                              Need to implement widely and as efficiently as possible.
+ *           1.4  2004/06/02 19:39:36  carliles Adding histogram crap.
+ *           1.3  2004/05/27 17:01:03  carliles ImageIO FITS reading "works".  Some cleanup would be good.
+ *           1.2  2004/05/26 23:00:15  carliles Fucking Sun and their fucking BufferedImages everywhere.
+ *           1.1  2004/05/26 16:56:11  carliles Initial checkin of separate FITS package.
+ *           1.12 2003/08/19 19:12:30  carliles
  */
 public class FITSImage extends BufferedImage {
 
@@ -152,24 +183,24 @@ public class FITSImage extends BufferedImage {
         double bScale = getImageHDU().getBScale();
         Object data = getImageHDU().getData().getData();
 
-        switch (getImageHDU().getBitPix()) {
-        case 8:
+        switch (getImageHDU().getBitpix()) {
+        case BYTE:
             int dataVal = ((byte[][]) data)[y][x];
             if (dataVal < 0) {
                 dataVal += 256;
             }
             result = bZero + bScale * dataVal;
             break;
-        case 16:
+        case SHORT:
             result = bZero + bScale * ((double) ((short[][]) data)[y][x]);
             break;
-        case 32:
+        case INTEGER:
             result = bZero + bScale * ((double) ((int[][]) data)[y][x]);
             break;
-        case -32:
+        case FLOAT:
             result = bZero + bScale * ((double) ((float[][]) data)[y][x]);
             break;
-        case -64:
+        case DOUBLE:
             result = bZero + bScale * ((double[][]) data)[y][x];
             break;
         default:
@@ -221,185 +252,228 @@ public class FITSImage extends BufferedImage {
 
 //#region BufferedImage METHODS
 
+    @Override
     public WritableRaster copyData(WritableRaster outRaster) {
         return getDelegate().copyData(outRaster);
     }
 
+    @Override
     public Graphics2D createGraphics() {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public void flush() {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public WritableRaster getAlphaRaster() {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public ColorModel getColorModel() {
         return getDelegate().getColorModel();
     }
 
+    @Override
     public Raster getData() {
         return getDelegate().getData();
     }
 
+    @Override
     public Raster getData(Rectangle rect) {
         return getDelegate().getData(rect);
     }
 
+    @Override
     public Graphics getGraphics() {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public int getHeight() {
         return getDelegate().getHeight();
     }
 
+    @Override
     public int getHeight(ImageObserver observer) {
         return getDelegate().getHeight(observer);
     }
 
+    @Override
     public int getMinTileX() {
         return getDelegate().getMinTileX();
     }
 
+    @Override
     public int getMinTileY() {
         return getDelegate().getMinTileY();
     }
 
+    @Override
     public int getMinX() {
         return getDelegate().getMinX();
     }
 
+    @Override
     public int getMinY() {
         return getDelegate().getMinY();
     }
 
+    @Override
     public int getNumXTiles() {
         return getDelegate().getNumXTiles();
     }
 
+    @Override
     public int getNumYTiles() {
         return getDelegate().getNumYTiles();
     }
 
+    @Override
     public Object getProperty(String name) {
         return getDelegate().getProperty(name);
     }
 
+    @Override
     public Object getProperty(String name, ImageObserver observer) {
         return getDelegate().getProperty(name, observer);
     }
 
+    @Override
     public String[] getPropertyNames() {
         return getDelegate().getPropertyNames();
     }
 
+    @Override
     public WritableRaster getRaster() {
         return getDelegate().getRaster();
     }
 
+    @Override
     public int getRGB(int x, int y) {
         return getDelegate().getRGB(x, y);
     }
 
+    @Override
     public int[] getRGB(int startX, int startY, int w, int h,
                         int[] rgbArray, int offset, int scansize) {
         return getDelegate().getRGB(startX, startY, w, h,
                 rgbArray, offset, scansize);
     }
 
+    @Override
     public SampleModel getSampleModel() {
         return getDelegate().getSampleModel();
     }
 
+    @Override
     public ImageProducer getSource() {
         return getDelegate().getSource();
     }
 
+    @Override
     public Vector<RenderedImage> getSources() {
         return getDelegate().getSources();
     }
 
+    @Override
     public BufferedImage getSubimage(int x, int y, int w, int h) {
         return getDelegate().getSubimage(x, y, w, h);
     }
 
+    @Override
     public Raster getTile(int tileX, int tileY) {
         return getDelegate().getTile(tileX, tileY);
     }
 
+    @Override
     public int getTileGridXOffset() {
         return getDelegate().getTileGridXOffset();
     }
 
+    @Override
     public int getTileGridYOffset() {
         return getDelegate().getTileGridYOffset();
     }
 
+    @Override
     public int getTileHeight() {
         return getDelegate().getTileHeight();
     }
 
+    @Override
     public int getTileWidth() {
         return getDelegate().getTileWidth();
     }
 
+    @Override
     public int getType() {
         return getDelegate().getType();
     }
 
+    @Override
     public int getWidth() {
         return getDelegate().getWidth();
     }
 
+    @Override
     public int getWidth(ImageObserver observer) {
         return getDelegate().getWidth(observer);
     }
 
+    @Override
     public WritableRaster getWritableTile(int tileX, int tileY) {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public Point[] getWritableTileIndices() {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public boolean hasTileWriters() {
         return false;
     }
 
+    @Override
     public boolean isAlphaPremultiplied() {
         return true;
     }
 
+    @Override
     public boolean isTileWritable(int tileX, int tileY) {
         return false;
     }
 
+    @Override
     public void releaseWritableTile(int tileX, int tileY) {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public void setData(Raster r) {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public void setRGB(int x, int y, int rgb) {
         throw new RuntimeException(new Exception().getStackTrace()[0].
                 getMethodName() + " not supported");
     }
 
+    @Override
     public void setRGB(int startX, int startY, int w, int h,
                        int[] rgbArray, int offset, int scansize) {
         throw new RuntimeException(new Exception().getStackTrace()[0].
@@ -469,31 +543,18 @@ public class FITSImage extends BufferedImage {
      */
     public static BufferedImage[] createScaledImages(ImageHDU hdu)
             throws FitsException, DataTypeNotSupportedException {
-        int bitpix = hdu.getBitPix();
+        Bitpix bitpix = hdu.getBitpix();
         double bZero = hdu.getBZero();
         double bScale = hdu.getBScale();
         Object data = hdu.getData().getData();
-        Histogram hist = null;
-
-        switch (bitpix) {
-        case 8:
-            hist = ScaleUtils.computeHistogram((byte[][]) data, bZero, bScale);
-            break;
-        case 16:
-            hist = ScaleUtils.computeHistogram((short[][]) data, bZero, bScale);
-            break;
-        case 32:
-            hist = ScaleUtils.computeHistogram((int[][]) data, bZero, bScale);
-            break;
-        case -32:
-            hist = ScaleUtils.computeHistogram((float[][]) data, bZero, bScale);
-            break;
-        case -64:
-            hist = ScaleUtils.computeHistogram((double[][]) data, bZero, bScale);
-            break;
-        default:
-            throw new DataTypeNotSupportedException(bitpix);
-        }
+        Histogram hist = switch (bitpix) {
+            case BYTE -> ScaleUtils.computeHistogram((byte[][]) data, bZero, bScale);
+            case SHORT -> ScaleUtils.computeHistogram((short[][]) data, bZero, bScale);
+            case INTEGER -> ScaleUtils.computeHistogram((int[][]) data, bZero, bScale);
+            case FLOAT -> ScaleUtils.computeHistogram((float[][]) data, bZero, bScale);
+            case DOUBLE -> ScaleUtils.computeHistogram((double[][]) data, bZero, bScale);
+            default -> throw new DataTypeNotSupportedException(bitpix);
+        };
 
         return createScaledImages(hdu, hist,
                 hist.getMin(), hist.getMax(),
@@ -504,43 +565,30 @@ public class FITSImage extends BufferedImage {
                                                      double min, double max,
                                                      double sigma)
             throws FitsException, DataTypeNotSupportedException {
-        int bitpix = hdu.getBitPix();
+        Bitpix bitpix = hdu.getBitpix();
         int width = hdu.getAxes()[1]; // yes, the axes are in the wrong order
         int height = hdu.getAxes()[0];
         double bZero = hdu.getBZero();
         double bScale = hdu.getBScale();
         Object data = hdu.getData().getData();
-        short[][] scaledData = null;
-
-        switch (bitpix) {
-        case 8:
-            scaledData = ScaleUtils.scaleToUShort((byte[][]) data, hist,
+        short[][] scaledData = switch (bitpix) {
+            case BYTE -> ScaleUtils.scaleToUShort((byte[][]) data, hist,
                     width, height, bZero, bScale,
                     min, max, sigma);
-            break;
-        case 16:
-            scaledData = ScaleUtils.scaleToUShort((short[][]) data, hist,
+            case SHORT -> ScaleUtils.scaleToUShort((short[][]) data, hist,
                     width, height, bZero, bScale,
                     min, max, sigma);
-            break;
-        case 32:
-            scaledData = ScaleUtils.scaleToUShort((int[][]) data, hist,
+            case INTEGER -> ScaleUtils.scaleToUShort((int[][]) data, hist,
                     width, height, bZero, bScale,
                     min, max, sigma);
-            break;
-        case -32:
-            scaledData = ScaleUtils.scaleToUShort((float[][]) data, hist,
+            case FLOAT -> ScaleUtils.scaleToUShort((float[][]) data, hist,
                     width, height, bZero, bScale,
                     min, max, sigma);
-            break;
-        case -64:
-            scaledData = ScaleUtils.scaleToUShort((double[][]) data, hist,
+            case DOUBLE -> ScaleUtils.scaleToUShort((double[][]) data, hist,
                     width, height, bZero, bScale,
                     min, max, sigma);
-            break;
-        default:
-            throw new DataTypeNotSupportedException(bitpix);
-        }
+            default -> throw new DataTypeNotSupportedException(bitpix);
+        };
 
         ColorModel cm =
                 new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_sRGB),
@@ -565,7 +613,7 @@ public class FITSImage extends BufferedImage {
     }
 
     public static class DataTypeNotSupportedException extends Exception {
-        public DataTypeNotSupportedException(int bitpix) {
+        public DataTypeNotSupportedException(Bitpix bitpix) {
             super(bitpix + " is not a valid FITS data type.");
         }
     }
@@ -574,13 +622,6 @@ public class FITSImage extends BufferedImage {
         public NoImageDataFoundException() {
             super("No image data found in FITS file.");
         }
-    }
-
-    /**
-     * @return CVS Revision number.
-     */
-    public static String revision() {
-        return "$Revision: 1.21 $";
     }
 
     protected Fits _fits;
@@ -593,78 +634,3 @@ public class FITSImage extends BufferedImage {
     protected double _max = Double.NaN;
     protected BufferedImage[] _scaledImages;
 }
-
-/*
- * Revision History
- * ================
- * <p>
- * $Log: FITSImage.java,v $
- * Revision 1.21  2004/07/23 21:54:11  carliles
- * Added javadocs.
- * <p>
- * Revision 1.20  2004/07/22 22:29:08  carliles
- * Added "low" memory consumption SlowFITSImage.
- * <p>
- * Revision 1.19  2004/07/21 22:24:57  carliles
- * Removed some commented crap.
- * <p>
- * Revision 1.18  2004/07/21 18:03:55  carliles
- * Added asinh with sigma estimation.
- * <p>
- * Revision 1.17  2004/07/16 02:48:53  carliles
- * Hist EQ doesn't look quite right, but there's nothing to compare it to, and the
- * math looks right.
- * <p>
- * Revision 1.16  2004/07/14 02:40:49  carliles
- * Scaling should be done once and for all, with all possible accelerations.  Now
- * just have to add hist eq and asinh.
- * <p>
- * Revision 1.15  2004/07/09 02:22:31  carliles
- * Added log/sqrt maps, fixed wrong output for byte images (again).
- * <p>
- * Revision 1.14  2004/06/21 05:38:39  carliles
- * Got rescale lookup acceleration working for short images.  Also in theory for
- * int images, though I can't test because of dynamic range of my int image.
- * <p>
- * Revision 1.13  2004/06/19 01:11:49  carliles
- * Converted FITSImage to extend BufferedImage.
- * <p>
- * Revision 1.12  2004/06/17 01:05:05  carliles
- * Fixed some image orientation shit.  Added getOriginalValue method to FITSImage.
- * <p>
- * Revision 1.11  2004/06/16 22:27:20  carliles
- * Fixed bug with ImageHDU crap in FITSImage.
- * <p>
- * Revision 1.10  2004/06/16 22:21:02  carliles
- * Added method to fetch ImageHDU from FITSImage.
- * <p>
- * Revision 1.9  2004/06/07 21:14:06  carliles
- * Rescale works nicely for all types now.
- * <p>
- * Revision 1.8  2004/06/07 20:05:19  carliles
- * Added rescale to FITSImage.
- * <p>
- * Revision 1.7  2004/06/04 23:11:52  carliles
- * Cleaned up histogram crap a bit.
- * <p>
- * Revision 1.6  2004/06/04 01:01:36  carliles
- * Got rid of some overmodelling.
- * <p>
- * Revision 1.5  2004/06/02 22:17:37  carliles
- * Got the hang of cut levels.  Need to implement widely and as efficiently as
- * possible.
- * <p>
- * Revision 1.4  2004/06/02 19:39:36  carliles
- * Adding histogram crap.
- * <p>
- * Revision 1.3  2004/05/27 17:01:03  carliles
- * ImageIO FITS reading "works".  Some cleanup would be good.
- * <p>
- * Revision 1.2  2004/05/26 23:00:15  carliles
- * Fucking Sun and their fucking BufferedImages everywhere.
- * <p>
- * Revision 1.1  2004/05/26 16:56:11  carliles
- * Initial checkin of separate FITS package.
- * <p>
- * Revision 1.12  2003/08/19 19:12:30  carliles
- */
