@@ -8,6 +8,7 @@ import javax.imageio.stream.ImageInputStream;
 
 
 public class ImageInputStreamInputStream extends PushbackInputStream {
+
     public ImageInputStreamInputStream(ImageInputStream in) throws IOException {
         super(gunzipIfNecessary(new PushbackInputStream(new ImageInputStreamWrap(in),
                 2)), 100);
@@ -35,6 +36,7 @@ public class ImageInputStreamInputStream extends PushbackInputStream {
             _in = in;
         }
 
+        @Override
         public int available() throws IOException {
             long avail = _in.length();
 
@@ -49,38 +51,46 @@ public class ImageInputStreamInputStream extends PushbackInputStream {
             return (int) avail;
         }
 
+        @Override
         public void close() throws IOException {
             _in.close();
         }
 
+        @Override
         public void mark(int readlimit) {
             _in.mark();
         }
 
+        @Override
         public boolean markSupported() {
             return false;
         }
 
+        @Override
         public int read() throws IOException {
             return _in.read();
         }
 
+        @Override
         public int read(byte[] b) throws IOException {
             return _in.read(b);
         }
 
+        @Override
         public int read(byte[] b, int off, int len) throws IOException {
             return _in.read(b, off, len);
         }
 
+        @Override
         public void reset() throws IOException {
             _in.reset();
         }
 
+        @Override
         public long skip(long n) throws IOException {
             return _in.skipBytes(n);
         }
 
-        protected ImageInputStream _in;
+        protected final ImageInputStream _in;
     }
 }

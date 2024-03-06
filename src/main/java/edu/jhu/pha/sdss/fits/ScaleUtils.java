@@ -17,9 +17,31 @@ import java.util.Arrays;
  * the right type in the damn parameter list.
  *
  * @author carliles
- * @version 1.14
+ * @version 1.14 2004/07/23 18:52:35  carliles SlowFITSImage is done.
+ *          1.13 2004/07/22 22:29:08  carliles Added "low" memory consumption SlowFITSImage.
+ *          1.12 2004/07/21 18:03:56  carliles Added asinh with sigma estimation.
+ *          1.11 2004/07/16 02:48:53  carliles Hist EQ doesn't look quite right, but there's nothing to
+ *                                    compare it to, and the math looks right.
+ *          1.10 2004/07/14 02:40:49  carliles Scaling should be done once and for all, with all possible
+ *                                    accelerations. Now just have to add hist eq and asinh.
+ *          1.9  2004/07/09 02:22:31  carliles Added log/sqrt maps, fixed wrong output for byte images (again).
+ *          1.8  2004/06/21 05:38:39  carliles Got rescale lookup acceleration working for short images.
+ *                                             Also in theory for int images, though I can't test because of
+ *                                             dynamic range of my int image.
+ *          1.7  2004/06/17 01:05:05  carliles Fixed some image orientation shit.  Added getOriginalValue method to FITSImage.
+ *          1.6  2004/06/07 21:14:06  carliles Rescale works nicely for all types now.
+ *          1.5  2004/06/04 01:01:36  carliles Got rid of some overmodelling.
+ *          1.4  2004/06/02 22:17:37  carliles Got the hang of cut levels.  Need to implement widely and as efficiently
+ *                                             as possible.
+ *          1.3  2004/06/02 19:39:36  carliles Adding histogram crap.
+ *          1.2  2004/05/27 18:45:43  carliles Fixed scaling from byte to short (had to offset by 128 because of signed
+ *                                             bytes in Java).
+ *          1.1  2004/05/26 16:56:11  carliles Initial checkin of separate FITS package.
+ *          1.12 2003/08/19 19:12:30  carliles
  */
 public class ScaleUtils {
+
+    protected ScaleUtils() {}
 
     public static final String[] SCALE_NAMES = {
             "Linear", "Log", "Square Root", "Square", "Hist EQ", "Arcsinh"
@@ -686,13 +708,6 @@ public class ScaleUtils {
         return new Histogram(min, max, totalCount, counts);
     }
 
-    /**
-     * @return CVS Revision number.
-     */
-    public static String revision() {
-        return "$Revision: 1.14 $";
-    }
-
     protected static double[] createSqrtMap(int size) {
         double[] result = new double[size];
 
@@ -722,58 +737,3 @@ public class ScaleUtils {
     protected static final double[] SHORT_LOG_MAP =
             createLogMap((int) Math.pow(2.0, 16.0));
 }
-
-/*
- * Revision History
- * ================
- *
- * $Log: ScaleUtils.java,v $
- * Revision 1.14  2004/07/23 18:52:35  carliles
- * SlowFITSImage is done.
- *
- * Revision 1.13  2004/07/22 22:29:08  carliles
- * Added "low" memory consumption SlowFITSImage.
- *
- * Revision 1.12  2004/07/21 18:03:56  carliles
- * Added asinh with sigma estimation.
- *
- * Revision 1.11  2004/07/16 02:48:53  carliles
- * Hist EQ doesn't look quite right, but there's nothing to compare it to, and the
- * math looks right.
- *
- * Revision 1.10  2004/07/14 02:40:49  carliles
- * Scaling should be done once and for all, with all possible accelerations.  Now
- * just have to add hist eq and asinh.
- *
- * Revision 1.9  2004/07/09 02:22:31  carliles
- * Added log/sqrt maps, fixed wrong output for byte images (again).
- *
- * Revision 1.8  2004/06/21 05:38:39  carliles
- * Got rescale lookup acceleration working for short images.  Also in theory for
- * int images, though I can't test because of dynamic range of my int image.
- *
- * Revision 1.7  2004/06/17 01:05:05  carliles
- * Fixed some image orientation shit.  Added getOriginalValue method to FITSImage.
- *
- * Revision 1.6  2004/06/07 21:14:06  carliles
- * Rescale works nicely for all types now.
- *
- * Revision 1.5  2004/06/04 01:01:36  carliles
- * Got rid of some overmodelling.
- *
- * Revision 1.4  2004/06/02 22:17:37  carliles
- * Got the hang of cut levels.  Need to implement widely and as efficiently as
- * possible.
- *
- * Revision 1.3  2004/06/02 19:39:36  carliles
- * Adding histogram crap.
- *
- * Revision 1.2  2004/05/27 18:45:43  carliles
- * Fixed scaling from byte to short (had to offset by 128 because of signed bytes
- * in Java).
- *
- * Revision 1.1  2004/05/26 16:56:11  carliles
- * Initial checkin of separate FITS package.
- *
- * Revision 1.12  2003/08/19 19:12:30  carliles
- */

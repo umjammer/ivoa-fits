@@ -23,13 +23,23 @@ import javax.imageio.stream.ImageInputStream;
 import edu.jhu.pha.sdss.fits.FITSImage;
 import edu.jhu.pha.sdss.fits.SlowFITSImage;
 import nom.tam.fits.Fits;
+import vavi.util.Debug;
 
 
 /**
  * FITSReader.
  *
  * @author carliles
- * @version 1.8
+ * @version 1.8   2006/08/24 20:55:28  carliles Updated to work with change in jdk implementation.
+ *          1.7   2004/07/22 22:29:09  carliles Added "low" memory consumption SlowFITSImage.
+ *          1.6   2004/06/19 01:11:49  carliles Converted FITSImage to extend BufferedImage.
+ *          1.5   2004/05/27 18:13:50  carliles Added more implementation to FITSReader, though none of it
+ *                                             appears to be used, and none has been tested.
+ *          1.4   2004/05/27 17:01:03  carliles ImageIO FITS reading "works".  Some cleanup would be good.
+ *          1.3   2004/05/26 21:28:59  carliles FITSReaderSpi looks pretty done.
+ *          1.2   2004/05/26 17:10:00  carliles Getting CVS crap in files in place.
+ *          1.1   2004/05/26 16:56:11  carliles Initial checkin of separate FITS package.
+ *          1.12  2003/08/19 19:12:30  carliles
  */
 public class FITSReader extends ImageReader {
 
@@ -38,14 +48,17 @@ public class FITSReader extends ImageReader {
         // what the hell is an extension object?  I don't think we need it.
     }
 
+    @Override
     public IIOMetadata getImageMetadata(int imageIndex) {
         return null;
     }
 
+    @Override
     public IIOMetadata getStreamMetadata() {
         return null;
     }
 
+    @Override
     public Iterator<ImageTypeSpecifier> getImageTypes(int imageIndex) {
         // Returns an Iterator containing possible image types to which the
         // given image may be decoded, in the form of ImageTypeSpecifiers.
@@ -54,10 +67,12 @@ public class FITSReader extends ImageReader {
         return _imageTypeSpecifiers.iterator();
     }
 
+    @Override
     public int getNumImages(boolean allowSearch) {
         return read(0, null) == null ? 0 : 1;
     }
 
+    @Override
     public int getHeight(int imageIndex) {
         int result = 0;
 
@@ -69,6 +84,7 @@ public class FITSReader extends ImageReader {
         return result;
     }
 
+    @Override
     public int getWidth(int imageIndex) {
         int result = 0;
 
@@ -84,6 +100,7 @@ public class FITSReader extends ImageReader {
      * We ignore both parameters, because we expect only one image per stream,
      * and we only read it one way.
      */
+    @Override
     public BufferedImage read(int imageIndex, ImageReadParam param) {
         FITSImage result = getImage();
 
@@ -93,7 +110,7 @@ public class FITSReader extends ImageReader {
 
                 result = new SlowFITSImage(new Fits(in));
             } catch (Exception e) {
-                e.printStackTrace();
+                Debug.printStackTrace(e);
                 result = null;
             }
 
@@ -133,36 +150,3 @@ public class FITSReader extends ImageReader {
 
     protected final List<ImageTypeSpecifier> _imageTypeSpecifiers = new ArrayList<>();
 }
-
-/*
- * Revision History
- * ================
- * <p>
- * $Log: FITSReader.java,v $
- * Revision 1.8  2006/08/24 20:55:28  carliles
- * Updated to work with change in jdk implementation.
- * <p>
- * Revision 1.7  2004/07/22 22:29:09  carliles
- * Added "low" memory consumption SlowFITSImage.
- * <p>
- * Revision 1.6  2004/06/19 01:11:49  carliles
- * Converted FITSImage to extend BufferedImage.
- * <p>
- * Revision 1.5  2004/05/27 18:13:50  carliles
- * Added more implementation to FITSReader, though none of it appears to be used,
- * and none has been tested.
- * <p>
- * Revision 1.4  2004/05/27 17:01:03  carliles
- * ImageIO FITS reading "works".  Some cleanup would be good.
- * <p>
- * Revision 1.3  2004/05/26 21:28:59  carliles
- * FITSReaderSpi looks pretty done.
- * <p>
- * Revision 1.2  2004/05/26 17:10:00  carliles
- * Getting CVS crap in files in place.
- * <p>
- * Revision 1.1  2004/05/26 16:56:11  carliles
- * Initial checkin of separate FITS package.
- * <p>
- * Revision 1.12  2003/08/19 19:12:30  carliles
- */

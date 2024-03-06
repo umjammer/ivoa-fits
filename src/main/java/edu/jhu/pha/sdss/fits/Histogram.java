@@ -7,6 +7,28 @@
 package edu.jhu.pha.sdss.fits;
 
 
+/**
+ * Histogram.
+ * <p>
+ * @author carliles
+ * @version 1.12  2004/07/23 21:54:11  carliles Added javadocs.
+ *          1.11  2004/07/21 18:03:55  carliles Added asinh with sigma estimation.
+ *          1.10  2004/07/16 02:48:53  carliles Hist EQ doesn't look quite right, but there's nothing to
+ *                                              compare it to, and the math looks right.
+ *          1.9   2004/07/14 02:40:49  carliles Scaling should be done once and for all, with all possible
+ *                                              accelerations. Now just have to add hist eq and asinh.
+ *          1.8   2004/07/09 02:22:31  carliles Added log/sqrt maps, fixed wrong output for byte images (again).
+ *          1.7   2004/06/21 05:38:39  carliles Got rescale lookup acceleration working for short images.
+ *                                              Also in theory for int images, though I can't test because of
+ *                                              dynamic range of my int image.
+ *          1.6   2004/06/08 17:28:17  carliles A little more refactoring.
+ *          1.5   2004/06/07 23:00:54  carliles Moved AffineTransform construction into Histogram.
+ *          1.4   2004/06/04 03:00:28  carliles Fixed histogram bound calculation.
+ *          1.3   2004/06/04 01:01:36  carliles Got rid of some overmodelling.
+ *          1.2   2004/06/02 22:17:37  carliles Got the hang of cut levels. Need to implement widely and as
+ *                                              efficiently as possible.
+ *          1.1   2004/06/02 19:39:36  carliles Adding histogram crap.
+ */
 public class Histogram {
 
     public Histogram(double min, double max, int totalCount, int[] counts) {
@@ -130,13 +152,6 @@ public class Histogram {
     }
 
     /**
-     * @return CVS Revision number.
-     */
-    public static String revision() {
-        return "$Revision: 1.12 $";
-    }
-
-    /**
      * A container class used by the <CODE>calculateBounds</CODE> method.
      */
     public static class Bounds {
@@ -149,8 +164,8 @@ public class Histogram {
             return getClass().getName() + " low = " + low + " high = " + high;
         }
 
-        public double low;
-        public double high;
+        public final double low;
+        public final double high;
     }
 
     protected static double[] calculateCdf(int[] counts, int totalCount) {
@@ -192,49 +207,3 @@ public class Histogram {
     protected double[] _cdf;
     protected int _totalCount;
 }
-
-/*
- * Revision History
- * ================
- * <p>
- * $Log: Histogram.java,v $
- * Revision 1.12  2004/07/23 21:54:11  carliles
- * Added javadocs.
- * <p>
- * Revision 1.11  2004/07/21 18:03:55  carliles
- * Added asinh with sigma estimation.
- * <p>
- * Revision 1.10  2004/07/16 02:48:53  carliles
- * Hist EQ doesn't look quite right, but there's nothing to compare it to, and the
- * math looks right.
- * <p>
- * Revision 1.9  2004/07/14 02:40:49  carliles
- * Scaling should be done once and for all, with all possible accelerations.  Now
- * just have to add hist eq and asinh.
- * <p>
- * Revision 1.8  2004/07/09 02:22:31  carliles
- * Added log/sqrt maps, fixed wrong output for byte images (again).
- * <p>
- * Revision 1.7  2004/06/21 05:38:39  carliles
- * Got rescale lookup acceleration working for short images.  Also in theory for
- * int images, though I can't test because of dynamic range of my int image.
- * <p>
- * Revision 1.6  2004/06/08 17:28:17  carliles
- * A little more refactoring.
- * <p>
- * Revision 1.5  2004/06/07 23:00:54  carliles
- * Moved AffineTransform construction into Histogram.
- * <p>
- * Revision 1.4  2004/06/04 03:00:28  carliles
- * Fixed histogram bound calculation.
- * <p>
- * Revision 1.3  2004/06/04 01:01:36  carliles
- * Got rid of some overmodelling.
- * <p>
- * Revision 1.2  2004/06/02 22:17:37  carliles
- * Got the hang of cut levels.  Need to implement widely and as efficiently as
- * possible.
- * <p>
- * Revision 1.1  2004/06/02 19:39:36  carliles
- * Adding histogram crap.
- */

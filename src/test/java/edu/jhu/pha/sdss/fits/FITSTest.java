@@ -11,6 +11,9 @@ import java.nio.file.Paths;
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+
+import vavi.util.Debug;
 
 
 public class FITSTest {
@@ -27,12 +30,12 @@ public class FITSTest {
         JComponent imagePanel = createImagePanel(image);
         imagePanel.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
 
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.getContentPane().add(imagePanel);
         frame.pack();
         frame.setVisible(true);
 
-        if (image instanceof FITSImage) {
-            FITSImage fimage = (FITSImage) image;
+        if (image instanceof FITSImage fimage) {
 
             try {
                 Thread.sleep(1000);
@@ -48,7 +51,7 @@ public class FITSTest {
                 fimage.setScaleMethod(FITSImage.SCALE_ASINH);
                 frame.repaint();
             } catch (RuntimeException e) {
-                e.getCause().printStackTrace();
+                Debug.printStackTrace(e.getCause());
             }
 
             System.out.println("Finding max value");
@@ -69,8 +72,8 @@ public class FITSTest {
             // 5 times!  But I don't think Tom had much choice because Java
             // doesn't give you any way to address these primitive types with a
             // single supertype.
-            switch (fimage.getImageHDU().getBitPix()) {
-            case 8:
+            switch (fimage.getImageHDU().getBitpix()) {
+            case BYTE:
                 int shifted = 0;
                 for (int x = 0; x < axes[1]; ++x) {
                     for (int y = 0; y < axes[0]; ++y) {
@@ -83,7 +86,7 @@ public class FITSTest {
                     }
                 }
                 break;
-            case 16:
+            case SHORT:
                 for (int x = 0; x < axes[1]; ++x) {
                     for (int y = 0; y < axes[0]; ++y) {
                         val = bScale * ((double) ((short[][]) data)[y][x]) + bZero;
@@ -91,7 +94,7 @@ public class FITSTest {
                     }
                 }
                 break;
-            case 32:
+            case INTEGER:
                 for (int x = 0; x < axes[1]; ++x) {
                     for (int y = 0; y < axes[0]; ++y) {
                         val = bScale * ((double) ((int[][]) data)[y][x]) + bZero;
@@ -99,7 +102,7 @@ public class FITSTest {
                     }
                 }
                 break;
-            case -32:
+            case FLOAT:
                 for (int x = 0; x < axes[1]; ++x) {
                     for (int y = 0; y < axes[0]; ++y) {
                         val = bScale * ((double) ((float[][]) data)[y][x]) + bZero;
@@ -107,7 +110,7 @@ public class FITSTest {
                     }
                 }
                 break;
-            case -64:
+            case DOUBLE:
                 for (int x = 0; x < axes[1]; ++x) {
                     for (int y = 0; y < axes[0]; ++y) {
                         val = bScale * ((double[][]) data)[y][x] + bZero;
@@ -115,16 +118,15 @@ public class FITSTest {
                     }
                 }
                 break;
-            default:
-                break;
             }
             System.out.println("The hard way... max = " + max);
         }
     }
 
-    protected static JComponent createImagePanel(final RenderedImage image) {
+    protected static JComponent createImagePanel(RenderedImage image) {
 
         return new JComponent() {
+            @Override
             public void paintComponent(Graphics g) {
                 revalidate();
 
